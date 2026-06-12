@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Personal Dashboard</title>
+    <title>My Dashboard v3.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -12,30 +12,43 @@
             --border-color: #30363d;
             --text-color: #f0f6fc;
             --accent-color: #58a6ff;
+            --trans-white: rgba(255, 255, 255, 0.08);
         }
 
+        /* 1. 전체 가운데 정렬 설정 */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Pretendard', -apple-system, sans-serif;
             margin: 0;
-            padding: 40px 20px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* 상하 가운데 */
+            min-height: 100vh; /* 화면 높이 전체 사용 */
+            box-sizing: border-box;
+        }
+
+        .main-wrapper {
+            width: 100%;
+            max-width: 1100px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            gap: 40px;
         }
 
-        /* 1. 상단 아이콘 링크 섹션 (반투명) */
+        /* 2. 상단 아이콘 바 & 커뮤니티 폴더 */
         .icon-bar {
             display: flex;
             gap: 15px;
-            margin-bottom: 40px;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
         }
 
         .icon-link {
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--trans-white);
             backdrop-filter: blur(8px);
             width: 55px;
             height: 55px;
@@ -48,6 +61,7 @@
             font-size: 22px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
+            position: relative;
         }
 
         .icon-link:hover {
@@ -56,29 +70,66 @@
             border-color: var(--accent-color);
         }
 
-        /* 2. 검색창 섹션 (구글/네이버) */
+        /* 커뮤니티 드롭다운 (폴더) */
+        .community-folder {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 65px;
+            right: 0;
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            min-width: 160px;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: block;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .dropdown-content a:hover {
+            background: rgba(88, 166, 255, 0.1);
+            color: var(--accent-color);
+        }
+
+        .community-folder:hover .dropdown-content {
+            display: block;
+        }
+
+        /* 3. 검색창 (구글/네이버) */
         .search-container {
             display: flex;
             gap: 20px;
             width: 100%;
-            max-width: 1100px;
-            margin-bottom: 40px;
         }
 
         .search-box {
             flex: 1;
             background: var(--tile-bg);
-            padding: 12px 20px;
+            padding: 14px 20px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
+            transition: border-color 0.3s;
         }
 
-        .search-box i {
-            margin-right: 15px;
-            color: #8b949e;
-        }
+        .search-box:focus-within { border-color: var(--accent-color); }
+
+        .search-box i { margin-right: 15px; color: #8b949e; width: 20px; text-align: center; }
 
         .search-box input {
             width: 100%;
@@ -89,62 +140,67 @@
             font-size: 16px;
         }
 
-        /* 3. 구글 캘린더 섹션 (너비 꽉 차게 & 비율 유지) */
+        /* 4. 구글 캘린더 (너비 비례 자동 조절) */
         .calendar-container {
             width: 100%;
-            max-width: 1100px;
             position: relative;
             background: #161b22;
-            border-radius: 16px;
+            border-radius: 20px;
             border: 1px solid var(--border-color);
             overflow: hidden;
-            /* 너비에 비례해 높이 설정 (가로:세로 16:10 비율) */
-            aspect-ratio: 16 / 10; 
+            /* 가로:세로 16:9 비율 유지 (값이 작을수록 상하가 길어짐) */
+            aspect-ratio: 16 / 9; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
         .calendar-container iframe {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             border: 0;
-            /* 캘린더 다크 필터 */
+            /* 캘린더 다크 모드 시각화 필터 */
             filter: invert(90%) hue-rotate(180deg) brightness(1.1);
         }
 
+        /* 모바일 대응 */
         @media (max-width: 768px) {
             .search-container { flex-direction: column; }
-            .calendar-container { aspect-ratio: 1 / 1.2; } /* 모바일에서는 세로로 길게 */
+            .calendar-container { aspect-ratio: 1 / 1.2; }
+            body { padding: 40px 20px; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
 
-    <div class="icon-bar">
-        <a href="https://google.com" class="icon-link"><i class="fab fa-google"></i></a>
-        <a href="https://youtube.com" class="icon-link"><i class="fab fa-youtube"></i></a>
-        <a href="https://gemini.google.com" class="icon-link"><i class="fa-solid fa-wand-magic-sparkles"></i></a>
-        <a href="https://notebooklm.google.com" class="icon-link"><i class="fa-solid fa-book-open"></i></a>
-        <a href="https://claude.ai" class="icon-link"><i class="fa-solid fa-robot"></i></a>
-        <a href="https://notion.so" class="icon-link"><i class="fa-solid fa-n"></i></a>
-        <a href="https://icloud.com" class="icon-link"><i class="fa-solid fa-cloud"></i></a>
-    </div>
+    <div class="main-wrapper">
+        <div class="icon-bar">
+            <a href="https://google.com" class="icon-link" title="Google"><i class="fab fa-google"></i></a>
+            <a href="https://youtube.com" class="icon-link" title="Youtube"><i class="fab fa-youtube"></i></a>
+            <a href="https://gemini.google.com" class="icon-link" title="Gemini"><i class="fa-solid fa-wand-magic-sparkles"></i></a>
+            <a href="https://notebooklm.google.com" class="icon-link" title="NotebookLM"><i class="fa-solid fa-book-open"></i></a>
+            <a href="https://claude.ai" class="icon-link" title="Claude"><i class="fa-solid fa-robot"></i></a>
+            <a href="https://notion.so" class="icon-link" title="Notion"><i class="fa-solid fa-n"></i></a>
+            <a href="https://icloud.com" class="icon-link" title="iCloud"><i class="fa-solid fa-cloud"></i></a>
+            
+            <div class="community-folder">
+                <a href="#" class="icon-link" title="Community"><i class="fa-solid fa-users"></i></a>
+                <div class="dropdown-content">
+                    <a href="https://www.fmkorea.com/" target="_blank">FMKorea</a>
+                    <a href="https://mlbpark.donga.com/mp/b.php?b=bullpen" target="_blank">MLBPark</a>
+                </div>
+            </div>
+        </div>
 
-    <div class="search-container">
-        <form class="search-box" action="https://www.google.com/search" method="GET">
-            <i class="fab fa-google"></i>
-            <input type="text" name="q" placeholder="Google 검색">
-        </form>
-        <form class="search-box" action="https://search.naver.com/search.naver" method="GET">
-            <i class="fa-solid fa-n"></i>
-            <input type="text" name="query" placeholder="Naver 검색">
-        </form>
-    </div>
+        <div class="search-container">
+            <form class="search-box" action="https://www.google.com/search" method="GET">
+                <i class="fab fa-google"></i>
+                <input type="text" name="q" placeholder="Google 검색">
+            </form>
+            <form class="search-box" action="https://search.naver.com/search.naver" method="GET">
+                <i class="fa-solid fa-n"></i>
+                <input type="text" name="query" placeholder="Naver 검색">
+            </form>
+        </div>
 
-    <div class="calendar-container">
-        <iframe src="https://calendar.google.com/calendar/embed?src=timsungmook%40gmail.com&ctz=Asia%2FSeoul" scrolling="no"></iframe>
-    </div>
-
-</body>
-</html>
+        <div class="calendar-container">
+            <iframe src="https://calendar.google.com/calendar/embed?src=timsungmook%40gmail.
