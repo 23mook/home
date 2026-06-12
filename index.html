@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Dashboard</title>
+    <title>My Dashboard v3.2</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -15,30 +15,31 @@
             --trans-white: rgba(255, 255, 255, 0.08);
         }
 
-        /* 1. 전체 가운데 정렬 설정 */
+        /* 전체 화면 및 정렬 설정 */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Pretendard', -apple-system, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 30px;
             display: flex;
             justify-content: center;
-            align-items: center; /* 상하 가운데 */
-            min-height: 100vh; /* 화면 높이 전체 사용 */
+            align-items: center; /* 위아래 정중앙 배치 */
+            min-height: 100vh;
             box-sizing: border-box;
         }
 
+        /* 전체 프레임 크기 대폭 확대 (1100px -> 1500px) */
         .main-wrapper {
-            width: 100%;
-            max-width: 1500px;
+            width: 95%; /* 화면 너비의 95%까지 꽉 차게 */
+            max-width: 1500px; /* 최대 크기 제한을 크게 늘림 */
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 40px;
         }
 
-        /* 2. 상단 아이콘 바 & 커뮤니티 폴더 */
+        /* 상단 아이콘 바 & 커뮤니티 폴더 */
         .icon-bar {
             display: flex;
             gap: 15px;
@@ -79,7 +80,7 @@
         .dropdown-content {
             display: none;
             position: absolute;
-            top: 65px;
+            top: 100%; /* 아이콘 바로 아래에 위치 */
             right: 0;
             background: rgba(22, 27, 34, 0.95);
             border: 1px solid var(--border-color);
@@ -89,6 +90,23 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             overflow: hidden;
+            pointer-events: auto; /* 마우스 이벤트를 확실히 받도록 설정 */
+        }
+
+        /* ⭐️ 문제 해결: 아이콘과 드롭다운 사이의 여백을 메우는 브리지 가상 요소 추가 */
+        .community-folder::before {
+            content: '';
+            position: absolute;
+            top: 55px; /* 아이콘 높이와 동일하게 설정 */
+            left: 0;
+            width: 100%;
+            height: 15px; /* 아이콘 바의 gap과 동일하게 설정 */
+            display: none;
+            z-index: 99; /* 드롭다운보다 약간 낮게 설정 */
+        }
+
+        .community-folder:hover::before {
+            display: block; /* 마우스를 올리면 브리지가 나타남 */
         }
 
         .dropdown-content a {
@@ -109,7 +127,7 @@
             display: block;
         }
 
-        /* 3. 검색창 (구글/네이버) */
+        /* 검색창 (구글/네이버) */
         .search-container {
             display: flex;
             gap: 20px;
@@ -119,7 +137,7 @@
         .search-box {
             flex: 1;
             background: var(--tile-bg);
-            padding: 14px 20px;
+            padding: 16px 20px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             display: flex;
@@ -140,7 +158,7 @@
             font-size: 16px;
         }
 
-        /* 4. 구글 캘린더 (너비 비례 자동 조절) */
+        /* 구글 캘린더 (너비 비례 자동 조절) */
         .calendar-container {
             width: 100%;
             position: relative;
@@ -148,8 +166,8 @@
             border-radius: 20px;
             border: 1px solid var(--border-color);
             overflow: hidden;
-            /* 가로:세로 16:9 비율 유지 (값이 작을수록 상하가 길어짐) */
-            aspect-ratio: 16 / 9; 
+            /* 가로:세로 16:8 비율. 너비가 넓어지면 캘린더가 위아래로 너무 커지지 않도록 비율 조정 */
+            aspect-ratio: 16 / 8; 
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
 
@@ -167,6 +185,7 @@
             .search-container { flex-direction: column; }
             .calendar-container { aspect-ratio: 1 / 1.2; }
             body { padding: 40px 20px; align-items: flex-start; }
+            .main-wrapper { max-width: 100%; width: 100%; }
         }
     </style>
 </head>
@@ -185,8 +204,8 @@
             <div class="community-folder">
                 <a href="#" class="icon-link" title="Community"><i class="fa-solid fa-users"></i></a>
                 <div class="dropdown-content">
-                    <a href="https://www.fmkorea.com/" target="_blank">FMKorea</a>
-                    <a href="https://mlbpark.donga.com/mp/b.php?b=bullpen" target="_blank">MLBPark</a>
+                    <a href="https://www.fmkorea.com/" target="_blank">Football</a>
+                    <a href="https://mlbpark.donga.com/mp/b.php?b=bullpen" target="_blank">Baseball</a>
                 </div>
             </div>
         </div>
