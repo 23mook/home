@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Dashboard</title>
+    <title>My Dashboard(Final)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -24,42 +24,51 @@
             padding: 30px;
             display: flex;
             justify-content: center;
-            align-items: center; /* 위아래 정중앙 배치 */
+            align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
         }
 
-        /* 전체 프레임 크기 대폭 확대 (1100px -> 1500px) */
+        /* 전체 프레임 크기 (최대 1500px) */
         .main-wrapper {
-            width: 95%; /* 화면 너비의 95%까지 꽉 차게 */
-            max-width: 1500px; /* 최대 크기 제한을 크게 늘림 */
+            width: 95%;
+            max-width: 1500px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 40px;
+            gap: 50px; /* 전체 섹션 간격도 살짝 늘림 */
         }
 
-        /* 상단 아이콘 바 & 커뮤니티 폴더 */
+        /* ⭐️ 아이콘 바: 간격 대폭 확대 (gap: 40px) */
         .icon-bar {
             display: flex;
-            gap: 15px;
+            gap: 40px; 
             flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
         }
 
+        /* 아이콘과 텍스트를 묶어주는 래퍼 */
+        .icon-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px; /* 아이콘과 텍스트 사이 간격 */
+        }
+
+        /* ⭐️ 아이콘 크기 확대 (70px) */
         .icon-link {
             background: var(--trans-white);
             backdrop-filter: blur(8px);
-            width: 55px;
-            height: 55px;
+            width: 70px;
+            height: 70px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 14px;
+            border-radius: 18px;
             text-decoration: none;
             color: white;
-            font-size: 22px;
+            font-size: 32px; /* 내부 아이콘 폰트 크기 확대 */
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
             position: relative;
@@ -67,20 +76,30 @@
 
         .icon-link:hover {
             background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-4px);
+            transform: translateY(-5px);
             border-color: var(--accent-color);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        /* 아이콘 아래 텍스트 라벨 */
+        .icon-label {
+            font-size: 14px;
+            color: #8b949e;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: capitalize;
         }
 
         /* 커뮤니티 드롭다운 (폴더) */
         .community-folder {
             position: relative;
-            display: inline-block;
         }
 
         .dropdown-content {
             display: none;
             position: absolute;
-            top: 100%; /* 아이콘 바로 아래에 위치 */
+            top: 100%; 
+            margin-top: 10px; /* 텍스트 아래에 자연스럽게 위치하도록 여백 추가 */
             right: 0;
             background: rgba(22, 27, 34, 0.95);
             border: 1px solid var(--border-color);
@@ -90,41 +109,36 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             overflow: hidden;
-            pointer-events: auto; /* 마우스 이벤트를 확실히 받도록 설정 */
+            pointer-events: auto;
         }
 
-        /* ⭐️ 문제 해결: 아이콘과 드롭다운 사이의 여백을 메우는 브리지 가상 요소 추가 */
+        /* 마우스 호버 브리지 (아이콘부터 드롭다운까지 끊기지 않게 연결) */
         .community-folder::before {
             content: '';
             position: absolute;
-            top: 55px; /* 아이콘 높이와 동일하게 설정 */
+            top: 70px; /* 아이콘 높이부터 시작 */
             left: 0;
             width: 100%;
-            height: 15px; /* 아이콘 바의 gap과 동일하게 설정 */
+            height: 45px; /* 텍스트와 드롭다운 사이 여백을 덮음 */
             display: none;
-            z-index: 99; /* 드롭다운보다 약간 낮게 설정 */
+            z-index: 99;
         }
 
-        .community-folder:hover::before {
-            display: block; /* 마우스를 올리면 브리지가 나타남 */
-        }
+        .community-folder:hover::before { display: block; }
+        .community-folder:hover .dropdown-content { display: block; }
 
         .dropdown-content a {
             color: var(--text-color);
-            padding: 12px 20px;
+            padding: 14px 20px;
             text-decoration: none;
             display: block;
-            font-size: 14px;
+            font-size: 15px;
             transition: background 0.2s;
         }
 
         .dropdown-content a:hover {
             background: rgba(88, 166, 255, 0.1);
             color: var(--accent-color);
-        }
-
-        .community-folder:hover .dropdown-content {
-            display: block;
         }
 
         /* 검색창 (구글/네이버) */
@@ -137,8 +151,8 @@
         .search-box {
             flex: 1;
             background: var(--tile-bg);
-            padding: 16px 20px;
-            border-radius: 12px;
+            padding: 18px 24px;
+            border-radius: 16px;
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -147,7 +161,7 @@
 
         .search-box:focus-within { border-color: var(--accent-color); }
 
-        .search-box i { margin-right: 15px; color: #8b949e; width: 20px; text-align: center; }
+        .search-box i { margin-right: 15px; color: #8b949e; font-size: 18px; width: 24px; text-align: center; }
 
         .search-box input {
             width: 100%;
@@ -155,7 +169,7 @@
             border: none;
             color: white;
             outline: none;
-            font-size: 16px;
+            font-size: 17px;
         }
 
         /* 구글 캘린더 (너비 비례 자동 조절) */
@@ -166,7 +180,6 @@
             border-radius: 20px;
             border: 1px solid var(--border-color);
             overflow: hidden;
-            /* 가로:세로 16:8 비율. 너비가 넓어지면 캘린더가 위아래로 너무 커지지 않도록 비율 조정 */
             aspect-ratio: 16 / 8; 
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
@@ -176,7 +189,6 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             border: 0;
-            /* 캘린더 다크 모드 시각화 필터 */
             filter: invert(90%) hue-rotate(180deg) brightness(1.1);
         }
 
@@ -186,6 +198,8 @@
             .calendar-container { aspect-ratio: 1 / 1.2; }
             body { padding: 40px 20px; align-items: flex-start; }
             .main-wrapper { max-width: 100%; width: 100%; }
+            .icon-bar { gap: 20px; }
+            .icon-link { width: 60px; height: 60px; font-size: 26px; }
         }
     </style>
 </head>
@@ -193,16 +207,44 @@
 
     <div class="main-wrapper">
         <div class="icon-bar">
-            <a href="https://google.com" class="icon-link" title="Google"><i class="fab fa-google"></i></a>
-            <a href="https://youtube.com" class="icon-link" title="Youtube"><i class="fab fa-youtube"></i></a>
-            <a href="https://gemini.google.com" class="icon-link" title="Gemini"><i class="fa-solid fa-wand-magic-sparkles"></i></a>
-            <a href="https://notebooklm.google.com" class="icon-link" title="NotebookLM"><i class="fa-solid fa-book-open"></i></a>
-            <a href="https://claude.ai" class="icon-link" title="Claude"><i class="fa-solid fa-robot"></i></a>
-            <a href="https://notion.so" class="icon-link" title="Notion"><i class="fa-solid fa-n"></i></a>
-            <a href="https://icloud.com" class="icon-link" title="iCloud"><i class="fa-solid fa-cloud"></i></a>
+            <div class="icon-wrapper">
+                <a href="https://google.com" class="icon-link" title="Google"><i class="fab fa-google"></i></a>
+                <span class="icon-label">Google</span>
+            </div>
             
-            <div class="community-folder">
-                <a href="#" class="icon-link" title="Community"><i class="fa-solid fa-users"></i></a>
+            <div class="icon-wrapper">
+                <a href="https://youtube.com" class="icon-link" title="Youtube"><i class="fab fa-youtube"></i></a>
+                <span class="icon-label">YouTube</span>
+            </div>
+            
+            <div class="icon-wrapper">
+                <a href="https://gemini.google.com" class="icon-link" title="Gemini"><i class="fa-solid fa-wand-magic-sparkles"></i></a>
+                <span class="icon-label">Gemini</span>
+            </div>
+            
+            <div class="icon-wrapper">
+                <a href="https://notebooklm.google.com" class="icon-link" title="NotebookLM"><i class="fa-solid fa-book-open"></i></a>
+                <span class="icon-label">NotebookLM</span>
+            </div>
+            
+            <div class="icon-wrapper">
+                <a href="https://claude.ai" class="icon-link" title="Claude"><i class="fa-solid fa-robot"></i></a>
+                <span class="icon-label">Claude</span>
+            </div>
+            
+            <div class="icon-wrapper">
+                <a href="https://notion.so" class="icon-link" title="Notion"><i class="fa-solid fa-n"></i></a>
+                <span class="icon-label">Notion</span>
+            </div>
+            
+            <div class="icon-wrapper">
+                <a href="https://icloud.com" class="icon-link" title="iCloud"><i class="fa-solid fa-cloud"></i></a>
+                <span class="icon-label">iCloud</span>
+            </div>
+            
+            <div class="icon-wrapper community-folder">
+                <a href="#" class="icon-link" title="Folder"><i class="fa-solid fa-users"></i></a>
+                <span class="icon-label">Folder</span>
                 <div class="dropdown-content">
                     <a href="https://www.fmkorea.com/" target="_blank">Football</a>
                     <a href="https://mlbpark.donga.com/mp/b.php?b=bullpen" target="_blank">Baseball</a>
