@@ -2,103 +2,122 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>묵쌤의 시작 페이지</title>
+    <title>My Dark Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 미니멀하고 모던한 디자인 설정 */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f5f5f7;
-            color: #1d1d1f;
+            background-color: #0d1117; /* 깃허브 다크 모드 배경색 */
+            color: #f0f6fc;
+            font-family: 'Segoe UI', sans-serif;
             margin: 0;
-            padding: 40px 20px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .container {
-            max-width: 800px;
-            width: 100%;
-        }
-        h1 {
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 40px;
-        }
-        
-        /* 상단 링크 섹션 */
-        .links-section {
+
+        /* 상단 아이콘 링크 섹션 */
+        .icon-bar {
             display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 15px;
+        }
+        .icon-link {
+            background: rgba(255, 255, 255, 0.1); /* 반투명 배경 */
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 24px;
-            margin-bottom: 50px;
-            flex-wrap: wrap;
-        }
-        .link-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
+            border-radius: 12px;
             text-decoration: none;
-            color: #1d1d1f;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-            transition: transform 0.2s, box-shadow 0.2s;
-            width: 80px;
+            color: #ffffff;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
         }
-        .link-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
-        }
-        .link-card i {
-            font-size: 32px;
-            margin-bottom: 12px;
-            color: #555;
-        }
-        .link-card span {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
+        .icon-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
         }
 
-        /* 캘린더 섹션 */
-        .calendar-section {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-            overflow: hidden;
-        }
-        .calendar-section iframe {
-            border: 0;
+        /* 검색창 섹션 */
+        .search-container {
+            display: flex;
+            gap: 20px;
             width: 100%;
-            height: 600px;
-            border-radius: 8px;
+            max-width: 900px;
+            margin-bottom: 30px;
+        }
+        .search-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid #30363d;
+        }
+        .search-box input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 10px;
+            outline: none;
+            font-size: 16px;
+        }
+        .search-box h3 { margin: 0 0 10px 10px; font-size: 14px; color: #8b949e; }
+
+        /* 캘린더 섹션 */
+        .calendar-wrap {
+            width: 100%;
+            max-width: 900px;
+            background: #161b22;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #30363d;
+        }
+        iframe {
+            width: 100%;
+            height: 550px;
+            border: none;
+            border-radius: 15px;
+            filter: invert(90%) hue-rotate(180deg); /* 캘린더를 강제로 다크모드처럼 보이게 함 */
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>자주 찾는 사이트</h1>
 
-        <div class="links-section">
-            <a href="https://github.com" class="link-card" target="_blank">
-                <i class="fab fa-github"></i>
-                <span>GitHub</span>
-            </a>
-            <a href="https://youtube.com" class="link-card" target="_blank">
-                <i class="fab fa-youtube" style="color: #ff0000;"></i>
-                <span>YouTube</span>
-            </a>
-            <a href="https://mail.google.com" class="link-card" target="_blank">
-                <i class="fas fa-envelope" style="color: #ea4335;"></i>
-                <span>Gmail</span>
-            </a>
-            </div>
+    <div class="icon-bar">
+        <a href="https://google.com" class="icon-link" title="Google"><i class="fab fa-google"></i></a>
+        <a href="https://youtube.com" class="icon-link" title="Youtube"><i class="fab fa-youtube"></i></a>
+        <a href="https://gemini.google.com" class="icon-link" title="Gemini"><i class="fa-solid fa-wand-magic-sparkles"></i></a>
+        <a href="https://notebooklm.google.com" class="icon-link" title="NotebookLM"><i class="fa-solid fa-book-open"></i></a>
+        <a href="https://claude.ai" class="icon-link" title="Claude"><i class="fa-solid fa-robot"></i></a>
+        <a href="https://notion.so" class="icon-link" title="Notion"><i class="fa-solid fa-n"></i></a>
+        <a href="https://icloud.com" class="icon-link" title="iCloud"><i class="fa-solid fa-cloud"></i></a>
+    </div>
 
-        <div class="calendar-section">
-            <iframe src="https://calendar.google.com/calendar/embed?src=ko.south_korea%23holiday%40group.v.calendar.google.com&ctz=Asia%2FSeoul" frameborder="0" scrolling="no"></iframe>
+    <div class="search-container">
+        <div class="search-box">
+            <h3>Google Search</h3>
+            <form action="https://www.google.com/search" method="GET">
+                <input type="text" name="q" placeholder="Google에서 검색...">
+            </form>
+        </div>
+        <div class="search-box">
+            <h3>Naver Search</h3>
+            <form action="https://search.naver.com/search.naver" method="GET">
+                <input type="text" name="query" placeholder="Naver에서 검색...">
+            </form>
         </div>
     </div>
+
+    <div class="calendar-wrap">
+        <iframe src="여기에_본인의_구글_캘린더_주소를_넣으세요"></iframe>
+    </div>
+
 </body>
 </html>
+
+제안드린 디자인과 코드가 마음에 드시는지 확인해 보세요! 추가로 수정하고 싶은 부분이 있다면 언제든 말씀해 주세요.
