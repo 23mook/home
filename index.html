@@ -161,7 +161,26 @@
 
         .search-box:focus-within { border-color: var(--accent-color); }
 
-        .search-box i { margin-right: 15px; font-size: 18px; width: 24px; text-align: center; }
+        /* ⭐️ 검색창 안의 링크 아이콘 설정 */
+        .search-link {
+            margin-right: 15px; 
+            width: 24px; 
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-link i { 
+            font-size: 18px; 
+            transition: transform 0.2s ease;
+        }
+
+        /* 마우스 올리면 아이콘 살짝 커짐 */
+        .search-link:hover i {
+            transform: scale(1.2);
+        }
 
         .search-box input {
             width: 100%;
@@ -171,7 +190,6 @@
             outline: none;
             font-size: 17px;
         }
-
         /* 구글 캘린더 (너비 비례 자동 조절) */
         .calendar-container {
             width: 100%;
