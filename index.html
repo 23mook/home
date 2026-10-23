@@ -33,7 +33,7 @@
     color: var(--text);
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
-    padding: 56px 24px 64px;
+    padding: 48px 24px 64px;
   }
   .wrap {
     width: 100%;
@@ -43,17 +43,6 @@
     flex-direction: column;
     gap: 28px;
   }
-
-  /* ── Header ── */
-  .hero { text-align: center; }
-  .clock {
-    font-size: 64px;
-    font-weight: 200;
-    letter-spacing: -2px;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-  }
-  .hero-sub { margin-top: 10px; color: var(--muted); font-size: 15px; }
 
   /* ── Dock ── */
   .dock {
@@ -105,6 +94,7 @@
     padding: 9px;
   }
   .icon.folder img { width: 13px; height: 13px; border-radius: 3px; }
+  .folder-glyph { font-size: 24px; color: #e8b84a; }
 
   .popover {
     position: absolute;
@@ -336,7 +326,6 @@
   /* ── Mobile ── */
   @media (max-width: 768px) {
     body { padding: 32px 16px 48px; }
-    .clock { font-size: 48px; }
     .search { grid-template-columns: 1fr; }
     .tile { width: 72px; }
     .calendar-frame { aspect-ratio: 1 / 1.2; }
@@ -349,12 +338,6 @@
 </head>
 <body>
 <div class="wrap">
-
-  <!-- Clock -->
-  <header class="hero">
-    <div class="clock" id="clock">--:--</div>
-    <div class="hero-sub" id="date"></div>
-  </header>
 
   <!-- Dock -->
   <nav class="dock">
@@ -399,14 +382,12 @@
 
     <div class="item folder-item">
       <button class="tile" type="button">
-        <span class="icon folder">
-          <img src="https://www.google.com/s2/favicons?domain=fmkorea.com&sz=64" alt="">
-          <img src="https://www.google.com/s2/favicons?domain=mlbpark.donga.com&sz=64" alt="">
-        </span>Community
+        <span class="icon"><i class="fa-solid fa-folder folder-glyph"></i></span>Community
       </button>
       <div class="popover"><div class="popover-inner">
         <a href="https://www.fmkorea.com/" target="_blank"><img src="https://www.google.com/s2/favicons?domain=fmkorea.com&sz=64" alt="">Football</a>
         <a href="https://mlbpark.donga.com/mp/b.php?b=bullpen" target="_blank"><img src="https://www.google.com/s2/favicons?domain=mlbpark.donga.com&sz=64" alt="">Baseball</a>
+        <a href="https://www.instagram.com/" target="_blank"><img src="https://www.google.com/s2/favicons?domain=instagram.com&sz=64" alt="">Instagram</a>
       </div></div>
     </div>
   </nav>
@@ -422,19 +403,6 @@
       <a href="https://www.naver.com" title="Naver"><img src="https://www.google.com/s2/favicons?domain=naver.com&sz=64" alt=""></a>
       <input type="text" name="query" placeholder="Naver 검색" autocomplete="off">
     </form>
-  </section>
-
-  <!-- Calendar -->
-  <section class="card">
-    <div class="card-head">
-      <div class="card-title"><img src="https://www.google.com/s2/favicons?domain=calendar.google.com&sz=64" alt="">Calendar</div>
-      <div class="head-actions">
-        <a class="ghost" href="https://calendar.google.com" title="Google Calendar 열기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-      </div>
-    </div>
-    <div class="calendar-frame">
-      <iframe src="https://calendar.google.com/calendar/embed?src=timsungmook%40gmail.com&ctz=Asia%2FSeoul&showTitle=0&showPrint=0&showCalendars=0&showTz=0" scrolling="no"></iframe>
-    </div>
   </section>
 
   <!-- Tasks -->
@@ -478,6 +446,19 @@
     </div>
   </section>
 
+  <!-- Calendar -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><img src="https://www.google.com/s2/favicons?domain=calendar.google.com&sz=64" alt="">Calendar</div>
+      <div class="head-actions">
+        <a class="ghost" href="https://calendar.google.com" title="Google Calendar 열기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+      </div>
+    </div>
+    <div class="calendar-frame">
+      <iframe src="https://calendar.google.com/calendar/embed?src=timsungmook%40gmail.com&ctz=Asia%2FSeoul&showTitle=0&showPrint=0&showCalendars=0&showTz=0" scrolling="no"></iframe>
+    </div>
+  </section>
+
 </div>
 
 <script>
@@ -486,18 +467,6 @@
    예) '1234567890-abc123.apps.googleusercontent.com'
    ═══════════════════════════════════════════════════════ */
 const GOOGLE_CLIENT_ID = '850744650419-08jj0qvdcd39s9u71di8gav3ffr4p319.apps.googleusercontent.com';
-
-/* ── Clock ── */
-function tick() {
-  const now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-  const h = now.getHours();
-  const greet = h < 5 ? '좋은 밤이에요' : h < 12 ? '좋은 아침이에요' : h < 18 ? '좋은 오후예요' : '좋은 저녁이에요';
-  document.getElementById('date').textContent =
-    now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }) + ' · ' + greet;
-}
-tick(); setInterval(tick, 10000);
 
 /* ── Folders: hover on desktop, tap to toggle on touch ── */
 document.querySelectorAll('.folder-item > .tile').forEach(btn => {
