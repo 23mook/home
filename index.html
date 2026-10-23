@@ -1,297 +1,707 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --tile-bg: rgba(255, 255, 255, 0.05);
-            --border-color: #30363d;
-            --text-color: #f0f6fc;
-            --accent-color: #58a6ff;
-            --trans-white: rgba(255, 255, 255, 0.08);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+  :root {
+    --bg: #09090b;
+    --surface: rgba(255,255,255,0.035);
+    --surface-hover: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.16);
+    --text: #ededef;
+    --muted: #8b8b94;
+    --faint: #5a5a63;
+    --accent: #7c9cff;
+    --danger: #ff6b6b;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(124,156,255,0.10), transparent 60%),
+      radial-gradient(800px 400px at 100% 100%, rgba(168,85,247,0.05), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 56px 24px 64px;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
 
-        /* 전체 화면 및 정렬 설정 */
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Pretendard', -apple-system, sans-serif;
-            margin: 0;
-            padding: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
+  /* ── Header ── */
+  .hero { text-align: center; }
+  .clock {
+    font-size: 64px;
+    font-weight: 200;
+    letter-spacing: -2px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .hero-sub { margin-top: 10px; color: var(--muted); font-size: 15px; }
 
-        /* 전체 프레임 크기 (최대 1500px) */
-        .main-wrapper {
-            width: 95%;
-            max-width: 1500px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 50px; 
-        }
+  /* ── Dock ── */
+  .dock {
+    align-self: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    backdrop-filter: blur(16px);
+  }
+  .item { position: relative; }
+  .tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 84px;
+    padding: 10px 4px 8px;
+    border-radius: 16px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    background: none;
+    border: 0;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .tile:hover, .item.open > .tile { background: var(--surface-hover); color: var(--text); }
+  .tile:hover .icon, .item.open .icon { transform: translateY(-2px); }
+  .icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: grid; place-items: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    transition: transform .2s ease;
+  }
+  .icon img { width: 26px; height: 26px; }
+  /* folder icon: 2x2 mini grid */
+  .icon.folder {
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+    padding: 9px;
+  }
+  .icon.folder img { width: 13px; height: 13px; border-radius: 3px; }
 
-        /* 아이콘 바: 간격 대폭 확대 (gap: 60px) */
-        .icon-bar {
-            display: flex;
-            gap: 50px; 
-            flex-wrap: wrap;
-            justify-content: center;
-            align-items: flex-start;
-        }
+  .popover {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    padding-top: 8px;               /* hover bridge */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s, transform .15s;
+    z-index: 50;
+  }
+  .item:hover .popover, .item.open .popover {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+  .popover-inner {
+    min-width: 200px;
+    padding: 6px;
+    background: rgba(20,20,24,0.92);
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .popover a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  .popover a:hover { background: var(--surface-hover); }
+  .popover img { width: 18px; height: 18px; }
 
-        /* 아이콘과 텍스트를 묶어주는 래퍼 */
-        .icon-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px; 
-        }
+  /* ── Search ── */
+  .search { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    height: 54px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    transition: border-color .2s, background .2s;
+  }
+  .search-box:focus-within { border-color: var(--border-strong); background: var(--surface-hover); }
+  .search-box a { display: grid; place-items: center; opacity: .9; transition: opacity .2s, transform .2s; }
+  .search-box a:hover { opacity: 1; transform: scale(1.1); }
+  .search-box img { width: 18px; height: 18px; }
+  .search-box input {
+    flex: 1;
+    background: none;
+    border: 0;
+    outline: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 16px;
+  }
+  .search-box input::placeholder { color: var(--faint); }
+  kbd {
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--faint);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 7px;
+  }
 
-        /* 아이콘 크기 확대 (70px) */
-        .icon-link {
-            background: var(--trans-white);
-            backdrop-filter: blur(8px);
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 18px;
-            text-decoration: none;
-            /* 기본 컬러 설정을 지우고 각 아이콘 본연의 색이 나오도록 변경 */
-            font-size: 32px; 
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-        }
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+  .card-title img { width: 16px; height: 16px; }
+  .head-actions { display: flex; align-items: center; gap: 6px; }
+  .ghost {
+    display: inline-grid;
+    place-items: center;
+    height: 30px;
+    min-width: 30px;
+    padding: 0 10px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--muted);
+    font: inherit;
+    font-size: 13px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .ghost:hover { background: var(--surface-hover); color: var(--text); }
 
-        .icon-link:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-5px);
-            border-color: var(--accent-color);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }
+  .calendar-frame { position: relative; aspect-ratio: 16 / 8; background: #111114; }
+  .calendar-frame iframe {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    border: 0;
+    filter: invert(92%) hue-rotate(180deg) brightness(0.95) contrast(0.95);
+  }
 
-        /* 아이콘 아래 텍스트 라벨 */
-        .icon-label {
-            font-size: 14px;
-            color: #8b949e;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            text-transform: capitalize;
-        }
+  /* ── Tasks ── */
+  select {
+    height: 30px;
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 8px;
+    font: inherit;
+    font-size: 13px;
+    outline: none;
+  }
+  .tasks-body { padding: 16px 18px 18px; }
+  .add-form { display: flex; gap: 8px; margin-bottom: 10px; }
+  .add-form input {
+    height: 42px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    padding: 0 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .add-form input:focus { border-color: var(--border-strong); }
+  .add-form input[type=text] { flex: 1; min-width: 0; }
+  .add-form input[type=date] { width: 150px; color: var(--muted); }
+  .btn {
+    height: 42px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 11px;
+    background: var(--text);
+    color: #0a0a0c;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: .88; }
 
-        /* 커뮤니티 드롭다운 (폴더) */
-        .community-folder {
-            position: relative;
-        }
+  .task-list { list-style: none; margin: 0; padding: 0; }
+  .task {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    transition: background .15s;
+  }
+  .task:hover { background: rgba(255,255,255,0.03); }
+  .check {
+    flex: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid var(--faint);
+    background: none;
+    display: grid; place-items: center;
+    cursor: pointer;
+    color: transparent;
+    font-size: 10px;
+    transition: border-color .2s, background .2s, color .2s;
+  }
+  .check:hover { border-color: var(--accent); color: var(--accent); }
+  .task.done .check { background: var(--accent); border-color: var(--accent); color: #0a0a0c; }
+  .task-text { flex: 1; min-width: 0; }
+  .task-title { font-size: 14px; overflow-wrap: anywhere; }
+  .task.done .task-title { color: var(--faint); text-decoration: line-through; }
+  .task-due { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .task-due.overdue { color: var(--danger); }
+  .task-del {
+    opacity: 0;
+    background: none; border: 0;
+    color: var(--faint);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: opacity .15s, color .15s;
+  }
+  .task:hover .task-del { opacity: 1; }
+  .task-del:hover { color: var(--danger); }
 
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%; 
-            margin-top: 10px; 
-            right: 0;
-            background: rgba(22, 27, 34, 0.95);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            min-width: 160px;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            overflow: hidden;
-            pointer-events: auto;
-        }
+  .done-toggle {
+    margin-top: 8px;
+    background: none; border: 0;
+    color: var(--muted);
+    font: inherit; font-size: 13px;
+    cursor: pointer;
+    padding: 6px 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .done-toggle i { font-size: 10px; transition: transform .2s; }
+  .done-toggle.expanded i { transform: rotate(90deg); }
 
-        /* 마우스 호버 브리지 */
-        .community-folder::before {
-            content: '';
-            position: absolute;
-            top: 70px; 
-            left: 0;
-            width: 100%;
-            height: 45px; 
-            display: none;
-            z-index: 99;
-        }
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 28px 12px;
+    line-height: 1.7;
+  }
+  .empty .btn { margin-top: 14px; }
+  .empty a { color: var(--accent); }
+  [hidden] { display: none !important; }
 
-        .community-folder:hover::before { display: block; }
-        .community-folder:hover .dropdown-content { display: block; }
-
-        .dropdown-content a {
-            color: var(--text-color);
-            padding: 14px 20px;
-            text-decoration: none;
-            display: block;
-            font-size: 15px;
-            transition: background 0.2s;
-        }
-
-        .dropdown-content a:hover {
-            background: rgba(88, 166, 255, 0.1);
-            color: var(--accent-color);
-        }
-
-        /* 검색창 (구글/네이버) */
-        .search-container {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-        }
-
-        .search-box {
-            flex: 1;
-            background: var(--tile-bg);
-            padding: 18px 24px;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            transition: border-color 0.3s;
-        }
-
-        .search-box:focus-within { border-color: var(--accent-color); }
-
-        /* ⭐️ 검색창 안의 링크 아이콘 설정 */
-        .search-link {
-            margin-right: 15px; 
-            width: 24px; 
-            text-align: center;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .search-link i { 
-            font-size: 18px; 
-            transition: transform 0.2s ease;
-        }
-
-        /* 마우스 올리면 아이콘 살짝 커짐 */
-        .search-link:hover i {
-            transform: scale(1.2);
-        }
-
-        .search-box input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            color: white;
-            outline: none;
-            font-size: 17px;
-        }
-        /* 구글 캘린더 (너비 비례 자동 조절) */
-        .calendar-container {
-            width: 100%;
-            position: relative;
-            background: #161b22;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-            aspect-ratio: 16 / 8; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        }
-
-        .calendar-container iframe {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            border: 0;
-            filter: invert(90%) hue-rotate(180deg) brightness(1.1);
-        }
-
-        /* 모바일 대응 */
-        @media (max-width: 768px) {
-            .search-container { flex-direction: column; }
-            .calendar-container { aspect-ratio: 1 / 1.2; }
-            body { padding: 40px 20px; align-items: flex-start; }
-            .main-wrapper { max-width: 100%; width: 100%; }
-            .icon-bar { gap: 20px; }
-            .icon-link { width: 60px; height: 60px; font-size: 26px; }
-        }
-    </style>
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    body { padding: 32px 16px 48px; }
+    .clock { font-size: 48px; }
+    .search { grid-template-columns: 1fr; }
+    .tile { width: 72px; }
+    .calendar-frame { aspect-ratio: 1 / 1.2; }
+    kbd { display: none; }
+    .add-form { flex-wrap: wrap; }
+    .add-form input[type=date] { flex: 1; }
+    .task-del { opacity: 1; }
+  }
+</style>
 </head>
 <body>
+<div class="wrap">
 
-    <div class="main-wrapper">
-        <div class="icon-bar">
-            <!-- 각 아이콘에 style="color: #색상코드;" 를 추가하여 오리지널 컬러 부여 -->
-            <div class="icon-wrapper">
-                <a href="https://mail.google.com" class="icon-link" title="G Mail"><i class="fab fa-google" style="color: #EA4335;"></i></a>
-                <span class="icon-label">G Mail</span>
-            </div>
-            
-            <div class="icon-wrapper">
-                <a href="https://youtube.com" class="icon-link" title="Youtube"><i class="fab fa-youtube" style="color: #FF0000;"></i></a>
-                <span class="icon-label">YouTube</span>
-            </div>
-            
-            <div class="icon-wrapper">
-                <a href="https://gemini.google.com" class="icon-link" title="Gemini"><i class="fa-solid fa-wand-magic-sparkles" style="color: #8E24AA;"></i></a>
-                <span class="icon-label">Gemini</span>
-            </div>
-            
-            <div class="icon-wrapper">
-                <a href="https://notebooklm.google.com" class="icon-link" title="NotebookLM"><i class="fa-solid fa-book-open" style="color: #4285F4;"></i></a>
-                <span class="icon-label">NotebookLM</span>
-            </div>
-            
-            <div class="icon-wrapper">
-                <a href="https://claude.ai" class="icon-link" title="Claude"><i class="fa-solid fa-robot" style="color: #D97757;"></i></a>
-                <span class="icon-label">Claude</span>
-            </div>
-            
-            <div class="icon-wrapper">
-                <a href="https://notion.so" class="icon-link" title="Notion"><i class="fa-solid fa-n" style="color: #FFFFFF;"></i></a>
-                <span class="icon-label">Notion</span>
-            </div>
-            
-            <div class="icon-wrapper">
-                <a href="https://icloud.com" class="icon-link" title="iCloud"><i class="fa-solid fa-cloud" style="color: #3CABFF;"></i></a>
-                <span class="icon-label">iCloud</span>
-            </div>
-            
-            <div class="icon-wrapper community-folder">
-                <a href="#" class="icon-link" title="Folder"><i class="fa-solid fa-users" style="color: #F4D03F;"></i></a>
-                <span class="icon-label">Folder</span>
-                <div class="dropdown-content">
-                    <a href="https://www.fmkorea.com/" target="_blank">Football</a>
-                    <a href="https://mlbpark.donga.com/mp/b.php?b=bullpen" target="_blank">Baseball</a>
-                </div>
-            </div>
-        </div>
+  <!-- Clock -->
+  <header class="hero">
+    <div class="clock" id="clock">--:--</div>
+    <div class="hero-sub" id="date"></div>
+  </header>
 
-        <div class="search-container">
-            <!-- ⭐️ 구글 아이콘 링크 추가 -->
-            <form class="search-box" action="https://www.google.com/search" method="GET">
-                <a href="https://www.google.com" class="search-link" title="Google 메인으로 이동">
-                    <i class="fab fa-google" style="color: #4285F4;"></i>
-                </a>
-                <input type="text" name="q" placeholder="Google 검색">
-            </form>
-            <!-- ⭐️ 네이버 아이콘 링크 추가 -->
-            <form class="search-box" action="https://search.naver.com/search.naver" method="GET">
-                <a href="https://www.naver.com" class="search-link" title="Naver 메인으로 이동">
-                    <i class="fa-solid fa-n" style="color: #03C75A;"></i>
-                </a>
-                <input type="text" name="query" placeholder="Naver 검색">
-            </form>
-        </div>
-
-        <div class="calendar-container">
-            <iframe src="https://calendar.google.com/calendar/embed?src=timsungmook%40gmail.com&ctz=Asia%2FSeoul" scrolling="no"></iframe>
-        </div>
+  <!-- Dock -->
+  <nav class="dock">
+    <div class="item">
+      <a class="tile" href="https://mail.google.com">
+        <span class="icon"><img src="https://www.google.com/s2/favicons?domain=mail.google.com&sz=64" alt=""></span>Gmail
+      </a>
+    </div>
+    <div class="item">
+      <a class="tile" href="https://youtube.com">
+        <span class="icon"><img src="https://www.google.com/s2/favicons?domain=youtube.com&sz=64" alt=""></span>YouTube
+      </a>
     </div>
 
+    <div class="item folder-item">
+      <button class="tile" type="button">
+        <span class="icon folder">
+          <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" alt="">
+          <img src="https://www.google.com/s2/favicons?domain=notebooklm.google.com&sz=64" alt="">
+          <img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=64" alt="">
+          <img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64" alt="">
+        </span>AI Tools
+      </button>
+      <div class="popover"><div class="popover-inner">
+        <a href="https://gemini.google.com"><img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" alt="">Gemini</a>
+        <a href="https://notebooklm.google.com"><img src="https://www.google.com/s2/favicons?domain=notebooklm.google.com&sz=64" alt="">NotebookLM</a>
+        <a href="https://claude.ai"><img src="https://www.google.com/s2/favicons?domain=claude.ai&sz=64" alt="">Claude</a>
+        <a href="https://chatgpt.com"><img src="https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64" alt="">ChatGPT</a>
+      </div></div>
+    </div>
+
+    <div class="item">
+      <a class="tile" href="https://notion.so">
+        <span class="icon"><img src="https://www.google.com/s2/favicons?domain=notion.so&sz=64" alt=""></span>Notion
+      </a>
+    </div>
+    <div class="item">
+      <a class="tile" href="https://icloud.com">
+        <span class="icon"><img src="https://www.google.com/s2/favicons?domain=icloud.com&sz=64" alt=""></span>iCloud
+      </a>
+    </div>
+
+    <div class="item folder-item">
+      <button class="tile" type="button">
+        <span class="icon folder">
+          <img src="https://www.google.com/s2/favicons?domain=fmkorea.com&sz=64" alt="">
+          <img src="https://www.google.com/s2/favicons?domain=mlbpark.donga.com&sz=64" alt="">
+        </span>Community
+      </button>
+      <div class="popover"><div class="popover-inner">
+        <a href="https://www.fmkorea.com/" target="_blank"><img src="https://www.google.com/s2/favicons?domain=fmkorea.com&sz=64" alt="">Football</a>
+        <a href="https://mlbpark.donga.com/mp/b.php?b=bullpen" target="_blank"><img src="https://www.google.com/s2/favicons?domain=mlbpark.donga.com&sz=64" alt="">Baseball</a>
+      </div></div>
+    </div>
+  </nav>
+
+  <!-- Search -->
+  <section class="search">
+    <form class="search-box" action="https://www.google.com/search" method="GET">
+      <a href="https://www.google.com" title="Google"><img src="https://www.google.com/s2/favicons?domain=google.com&sz=64" alt=""></a>
+      <input id="google-q" type="text" name="q" placeholder="Google 검색" autocomplete="off">
+      <kbd>/</kbd>
+    </form>
+    <form class="search-box" action="https://search.naver.com/search.naver" method="GET">
+      <a href="https://www.naver.com" title="Naver"><img src="https://www.google.com/s2/favicons?domain=naver.com&sz=64" alt=""></a>
+      <input type="text" name="query" placeholder="Naver 검색" autocomplete="off">
+    </form>
+  </section>
+
+  <!-- Calendar -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><img src="https://www.google.com/s2/favicons?domain=calendar.google.com&sz=64" alt="">Calendar</div>
+      <div class="head-actions">
+        <a class="ghost" href="https://calendar.google.com" title="Google Calendar 열기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+      </div>
+    </div>
+    <div class="calendar-frame">
+      <iframe src="https://calendar.google.com/calendar/embed?src=timsungmook%40gmail.com&ctz=Asia%2FSeoul&showTitle=0&showPrint=0&showCalendars=0&showTz=0" scrolling="no"></iframe>
+    </div>
+  </section>
+
+  <!-- Tasks -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-title"><img src="https://www.google.com/s2/favicons?domain=tasks.google.com&sz=64" alt="">Tasks</div>
+      <div class="head-actions">
+        <select id="list-select" hidden></select>
+        <button class="ghost" id="refresh-btn" title="새로고침" hidden><i class="fa-solid fa-rotate-right"></i></button>
+        <button class="ghost" id="disconnect-btn" title="연결 해제" hidden><i class="fa-solid fa-right-from-bracket"></i></button>
+        <a class="ghost" href="https://tasks.google.com" title="Google Tasks 열기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+      </div>
+    </div>
+    <div class="tasks-body">
+
+      <!-- 상태 1: Client ID 미설정 -->
+      <div class="empty" id="tasks-setup" hidden>
+        Google Tasks를 연결하려면 이 파일의 <code>GOOGLE_CLIENT_ID</code> 값을 설정해 주세요.<br>
+        그 전까지는 <a href="https://tasks.google.com">tasks.google.com</a>에서 확인할 수 있어요.
+      </div>
+
+      <!-- 상태 2: 로그인 필요 -->
+      <div class="empty" id="tasks-connect" hidden>
+        Google 계정을 연결하면 할 일을 여기서 보고 추가할 수 있어요.<br>
+        <button class="btn" id="connect-btn"><i class="fa-brands fa-google"></i>&nbsp; Google 계정 연결</button>
+      </div>
+
+      <!-- 상태 3: 연결됨 -->
+      <div id="tasks-main" hidden>
+        <form class="add-form" id="add-form">
+          <input type="text" id="task-input" placeholder="할 일 추가…" autocomplete="off" required>
+          <input type="date" id="task-due" title="마감일 (선택)">
+          <button class="btn" type="submit">추가</button>
+        </form>
+        <ul class="task-list" id="open-list"></ul>
+        <div class="empty" id="no-tasks" hidden>할 일이 모두 끝났어요 ✨</div>
+        <button class="done-toggle" id="done-toggle" hidden><i class="fa-solid fa-chevron-right"></i><span></span></button>
+        <ul class="task-list" id="done-list" hidden></ul>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   설정: Google Cloud Console에서 발급받은 OAuth 클라이언트 ID
+   예) '1234567890-abc123.apps.googleusercontent.com'
+   ═══════════════════════════════════════════════════════ */
+const GOOGLE_CLIENT_ID = '';
+
+/* ── Clock ── */
+function tick() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const h = now.getHours();
+  const greet = h < 5 ? '좋은 밤이에요' : h < 12 ? '좋은 아침이에요' : h < 18 ? '좋은 오후예요' : '좋은 저녁이에요';
+  document.getElementById('date').textContent =
+    now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }) + ' · ' + greet;
+}
+tick(); setInterval(tick, 10000);
+
+/* ── Folders: hover on desktop, tap to toggle on touch ── */
+document.querySelectorAll('.folder-item > .tile').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const item = btn.parentElement;
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.folder-item.open').forEach(i => i.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  });
+});
+document.addEventListener('click', () =>
+  document.querySelectorAll('.folder-item.open').forEach(i => i.classList.remove('open')));
+
+/* ── "/" focuses Google search ── */
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement.tagName;
+  if (e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+    e.preventDefault();
+    document.getElementById('google-q').focus();
+  }
+});
+
+/* ═══════════ Google Tasks ═══════════ */
+const API = 'https://tasks.googleapis.com/tasks/v1';
+const $ = id => document.getElementById(id);
+let token = null, tokenClient = null, currentList = null, showDone = false;
+
+const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
+const load  = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+
+function setState(state) {
+  $('tasks-setup').hidden   = state !== 'setup';
+  $('tasks-connect').hidden = state !== 'connect';
+  $('tasks-main').hidden    = state !== 'main';
+  ['list-select', 'refresh-btn', 'disconnect-btn'].forEach(id => $(id).hidden = state !== 'main');
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }
+  });
+  if (res.status === 401) { clearToken(); setState('connect'); throw new Error('unauthorized'); }
+  if (!res.ok) throw new Error('API ' + res.status);
+  return res.status === 204 ? null : res.json().catch(() => null);
+}
+
+function clearToken() { token = null; store('gt_token', null); store('gt_exp', null); }
+
+function initTasks() {
+  if (!GOOGLE_CLIENT_ID) return setState('setup');
+  const saved = load('gt_token'), exp = Number(load('gt_exp'));
+  if (saved && exp > Date.now()) { token = saved; setState('main'); loadLists(); }
+  else setState('connect');
+}
+
+// Google Identity Services 스크립트 로드 후 호출
+function gisLoaded() {
+  if (!GOOGLE_CLIENT_ID) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/tasks',
+    callback: resp => {
+      if (resp.error) return;
+      token = resp.access_token;
+      store('gt_token', token);
+      store('gt_exp', String(Date.now() + (resp.expires_in - 60) * 1000));
+      store('gt_consented', '1');
+      setState('main');
+      loadLists();
+    }
+  });
+}
+
+$('connect-btn').onclick = () => {
+  if (!tokenClient) return alert('Google 로그인 스크립트를 불러오는 중이에요. 잠시 후 다시 시도해 주세요.');
+  tokenClient.requestAccessToken({ prompt: load('gt_consented') ? '' : 'consent' });
+};
+
+$('disconnect-btn').onclick = () => {
+  if (token && window.google) google.accounts.oauth2.revoke(token, () => {});
+  clearToken(); store('gt_consented', null); setState('connect');
+};
+
+$('refresh-btn').onclick = () => loadTasks();
+
+async function loadLists() {
+  try {
+    const data = await api('/users/@me/lists?maxResults=100');
+    const lists = data.items || [];
+    const sel = $('list-select');
+    sel.innerHTML = '';
+    lists.forEach(l => sel.add(new Option(l.title, l.id)));
+    const savedList = load('gt_list');
+    currentList = lists.some(l => l.id === savedList) ? savedList : (lists[0] && lists[0].id);
+    sel.value = currentList;
+    loadTasks();
+  } catch (e) { console.error(e); }
+}
+
+$('list-select').onchange = e => { currentList = e.target.value; store('gt_list', currentList); loadTasks(); };
+
+async function loadTasks() {
+  if (!currentList) return;
+  try {
+    const data = await api(`/lists/${currentList}/tasks?showCompleted=true&showHidden=true&maxResults=100`);
+    const items = (data.items || []).filter(t => t.title);
+    const open = items.filter(t => t.status !== 'completed')
+                      .sort((a, b) => (a.position || '').localeCompare(b.position || ''));
+    const done = items.filter(t => t.status === 'completed')
+                      .sort((a, b) => (b.completed || '').localeCompare(a.completed || ''));
+    renderList($('open-list'), open);
+    renderList($('done-list'), done);
+    $('no-tasks').hidden = open.length > 0;
+    $('done-toggle').hidden = done.length === 0;
+    $('done-toggle').querySelector('span').textContent = `완료됨 (${done.length})`;
+    $('done-list').hidden = !showDone || done.length === 0;
+  } catch (e) { console.error(e); }
+}
+
+$('done-toggle').onclick = () => {
+  showDone = !showDone;
+  $('done-toggle').classList.toggle('expanded', showDone);
+  $('done-list').hidden = !showDone;
+};
+
+function formatDue(due) {
+  const d = due.slice(0, 10);                       // 'YYYY-MM-DD'
+  const today = new Date();
+  const todayStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const [, m, day] = d.split('-').map(Number);
+  let label = `${m}월 ${day}일`;
+  if (d === todayStr) label = '오늘';
+  return { label, overdue: d < todayStr };
+}
+
+function renderList(ul, tasks) {
+  ul.innerHTML = '';
+  tasks.forEach(t => {
+    const li = document.createElement('li');
+    li.className = 'task' + (t.status === 'completed' ? ' done' : '');
+
+    const check = document.createElement('button');
+    check.className = 'check';
+    check.title = t.status === 'completed' ? '미완료로 되돌리기' : '완료';
+    check.innerHTML = '<i class="fa-solid fa-check"></i>';
+    check.onclick = () => toggleTask(t);
+
+    const text = document.createElement('div');
+    text.className = 'task-text';
+    const title = document.createElement('div');
+    title.className = 'task-title';
+    title.textContent = t.title;
+    text.appendChild(title);
+    if (t.due && t.status !== 'completed') {
+      const { label, overdue } = formatDue(t.due);
+      const due = document.createElement('div');
+      due.className = 'task-due' + (overdue ? ' overdue' : '');
+      due.innerHTML = '<i class="fa-regular fa-calendar"></i> ';
+      due.appendChild(document.createTextNode(label));
+      text.appendChild(due);
+    }
+
+    const del = document.createElement('button');
+    del.className = 'task-del';
+    del.title = '삭제';
+    del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    del.onclick = () => deleteTask(t);
+
+    li.append(check, text, del);
+    ul.appendChild(li);
+  });
+}
+
+$('add-form').onsubmit = async e => {
+  e.preventDefault();
+  const title = $('task-input').value.trim();
+  if (!title || !currentList) return;
+  const body = { title };
+  if ($('task-due').value) body.due = $('task-due').value + 'T00:00:00.000Z';
+  $('task-input').value = ''; $('task-due').value = '';
+  try { await api(`/lists/${currentList}/tasks`, { method: 'POST', body: JSON.stringify(body) }); }
+  catch (err) { console.error(err); }
+  loadTasks();
+};
+
+async function toggleTask(t) {
+  const body = t.status === 'completed'
+    ? { status: 'needsAction', completed: null }
+    : { status: 'completed' };
+  try { await api(`/lists/${currentList}/tasks/${t.id}`, { method: 'PATCH', body: JSON.stringify(body) }); }
+  catch (err) { console.error(err); }
+  loadTasks();
+}
+
+async function deleteTask(t) {
+  try { await api(`/lists/${currentList}/tasks/${t.id}`, { method: 'DELETE' }); }
+  catch (err) { console.error(err); }
+  loadTasks();
+}
+
+initTasks();
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
 </body>
 </html>
