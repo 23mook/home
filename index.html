@@ -321,6 +321,8 @@
   }
   .empty .btn { margin-top: 14px; }
   .empty a { color: var(--accent); }
+  .key-form { max-width: 360px; margin: 16px auto 0; }
+  .form-error { color: var(--danger); font-size: 13px; min-height: 1em; margin-top: 4px; }
   [hidden] { display: none !important; }
 
   /* ── Mobile ── */
@@ -412,22 +414,26 @@
       <div class="head-actions">
         <select id="list-select" hidden></select>
         <button class="ghost" id="refresh-btn" title="새로고침" hidden><i class="fa-solid fa-rotate-right"></i></button>
-        <button class="ghost" id="disconnect-btn" title="연결 해제" hidden><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button class="ghost" id="disconnect-btn" title="이 기기에서 연결 해제" hidden><i class="fa-solid fa-right-from-bracket"></i></button>
         <a class="ghost" href="https://tasks.google.com" title="Google Tasks 열기"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
       </div>
     </div>
     <div class="tasks-body">
 
-      <!-- 상태 1: Client ID 미설정 -->
+      <!-- 상태 1: 연결 주소 미설정 -->
       <div class="empty" id="tasks-setup" hidden>
-        Google Tasks를 연결하려면 이 파일의 <code>GOOGLE_CLIENT_ID</code> 값을 설정해 주세요.<br>
+        Google Tasks를 연결하려면 이 파일의 <code>TASKS_API_URL</code> 값을 설정해 주세요.<br>
         그 전까지는 <a href="https://tasks.google.com">tasks.google.com</a>에서 확인할 수 있어요.
       </div>
 
-      <!-- 상태 2: 로그인 필요 -->
+      <!-- 상태 2: 비밀번호 입력 (기기당 1회) -->
       <div class="empty" id="tasks-connect" hidden>
-        Google 계정을 연결하면 할 일을 여기서 보고 추가할 수 있어요.<br>
-        <button class="btn" id="connect-btn"><i class="fa-brands fa-google"></i>&nbsp; Google 계정 연결</button>
+        이 기기에서 처음 사용할 때 한 번만 비밀번호를 입력해 주세요.
+        <form class="add-form key-form" id="key-form">
+          <input type="password" id="key-input" placeholder="비밀번호" autocomplete="current-password" required>
+          <button class="btn" type="submit">연결</button>
+        </form>
+        <div class="form-error" id="key-error"></div>
       </div>
 
       <!-- 상태 3: 연결됨 -->
@@ -437,6 +443,7 @@
           <input type="date" id="task-due" title="마감일 (선택)">
           <button class="btn" type="submit">추가</button>
         </form>
+        <div class="empty" id="tasks-loading">불러오는 중…</div>
         <ul class="task-list" id="open-list"></ul>
         <div class="empty" id="no-tasks" hidden>할 일이 모두 끝났어요 ✨</div>
         <button class="done-toggle" id="done-toggle" hidden><i class="fa-solid fa-chevron-right"></i><span></span></button>
@@ -463,10 +470,10 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════
-   설정: Google Cloud Console에서 발급받은 OAuth 클라이언트 ID
-   예) '1234567890-abc123.apps.googleusercontent.com'
+   설정: Google Apps Script 웹 앱 URL
+   예) 'https://script.google.com/macros/s/AKfy.../exec'
    ═══════════════════════════════════════════════════════ */
-const GOOGLE_CLIENT_ID = '850744650419-08jj0qvdcd39s9u71di8gav3ffr4p319.apps.googleusercontent.com';
+const TASKS_API_URL = 'https://script.google.com/macros/s/AKfycby42xebIYsNwQGxfPw4VuCaXeMstiWRFNiv_JD47oLBm8t4n1Ao5pkxYVdFeDurYXL_JA/exec';
 
 /* ── Folders: hover on desktop, tap to toggle on touch ── */
 document.querySelectorAll('.folder-item > .tile').forEach(btn => {
@@ -490,13 +497,14 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ═══════════ Google Tasks ═══════════ */
-const API = 'https://tasks.googleapis.com/tasks/v1';
+/* ═══════════ Google Tasks (via Apps Script) ═══════════ */
 const $ = id => document.getElementById(id);
-let token = null, tokenClient = null, currentList = null, showDone = false;
-
 const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
 const load  = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const loadJSON = k => { try { return JSON.parse(load(k)); } catch (e) { return null; } };
+
+let apiKey = load('gt_key');
+let currentList = null, tasks = [], showDone = false, pending = 0;
 
 function setState(state) {
   $('tasks-setup').hidden   = state !== 'setup';
@@ -505,87 +513,117 @@ function setState(state) {
   ['list-select', 'refresh-btn', 'disconnect-btn'].forEach(id => $(id).hidden = state !== 'main');
 }
 
-async function api(path, opts = {}) {
-  const res = await fetch(API + path, {
-    ...opts,
-    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }
+async function call(action, params = {}) {
+  const res = await fetch(TASKS_API_URL, {
+    method: 'POST',
+    body: JSON.stringify({ key: apiKey, action, ...params })   // text/plain → CORS preflight 없음
   });
-  if (res.status === 401) { clearToken(); setState('connect'); throw new Error('unauthorized'); }
-  if (!res.ok) throw new Error('API ' + res.status);
-  return res.status === 204 ? null : res.json().catch(() => null);
+  const data = await res.json();
+  if (data.error === 'unauthorized') {
+    apiKey = null; store('gt_key', null);
+    setState('connect');
+    $('key-error').textContent = '비밀번호가 맞지 않아요.';
+    throw new Error('unauthorized');
+  }
+  if (data.error) throw new Error(data.error);
+  return data;
 }
 
-function clearToken() { token = null; store('gt_token', null); store('gt_exp', null); }
+// 쓰기 작업: 화면은 즉시 반영하고, 모든 요청이 끝나면 서버와 다시 동기화
+async function write(action, params) {
+  pending++;
+  try { return await call(action, params); }
+  catch (e) { console.error(e); }
+  finally { if (--pending === 0) loadTasks(); }
+}
 
 function initTasks() {
-  if (!GOOGLE_CLIENT_ID) return setState('setup');
-  const saved = load('gt_token'), exp = Number(load('gt_exp'));
-  if (saved && exp > Date.now()) { token = saved; setState('main'); loadLists(); }
-  else setState('connect');
+  if (!TASKS_API_URL) return setState('setup');
+  if (!apiKey) return setState('connect');
+  setState('main');
+  const cachedLists = loadJSON('gt_lists');
+  if (cachedLists) {
+    fillLists(cachedLists);
+    const cached = loadJSON('gt_tasks_' + currentList);
+    if (cached) { tasks = cached; render(); }
+  }
+  loadLists();
 }
 
-// Google Identity Services 스크립트 로드 후 호출
-function gisLoaded() {
-  if (!GOOGLE_CLIENT_ID) return;
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/tasks',
-    callback: resp => {
-      if (resp.error) return;
-      token = resp.access_token;
-      store('gt_token', token);
-      store('gt_exp', String(Date.now() + (resp.expires_in - 60) * 1000));
-      store('gt_consented', '1');
-      setState('main');
-      loadLists();
-    }
-  });
-}
-
-$('connect-btn').onclick = () => {
-  if (!tokenClient) return alert('Google 로그인 스크립트를 불러오는 중이에요. 잠시 후 다시 시도해 주세요.');
-  tokenClient.requestAccessToken({ prompt: load('gt_consented') ? '' : 'consent' });
+$('key-form').onsubmit = async e => {
+  e.preventDefault();
+  apiKey = $('key-input').value.trim();
+  $('key-error').textContent = '';
+  try {
+    await call('lists');
+    store('gt_key', apiKey);
+    $('key-input').value = '';
+    setState('main');
+    loadLists();
+  } catch (err) {
+    if (err.message !== 'unauthorized') $('key-error').textContent = '연결하지 못했어요. 주소 설정을 확인해 주세요.';
+    console.error(err);
+  }
 };
 
 $('disconnect-btn').onclick = () => {
-  if (token && window.google) google.accounts.oauth2.revoke(token, () => {});
-  clearToken(); store('gt_consented', null); setState('connect');
+  apiKey = null; store('gt_key', null);
+  $('key-error').textContent = '';
+  setState('connect');
 };
 
 $('refresh-btn').onclick = () => loadTasks();
 
+function fillLists(lists) {
+  const sel = $('list-select');
+  sel.innerHTML = '';
+  lists.forEach(l => sel.add(new Option(l.title, l.id)));
+  const saved = load('gt_list');
+  currentList = lists.some(l => l.id === saved) ? saved : (lists[0] && lists[0].id);
+  sel.value = currentList;
+}
+
 async function loadLists() {
   try {
-    const data = await api('/users/@me/lists?maxResults=100');
-    const lists = data.items || [];
-    const sel = $('list-select');
-    sel.innerHTML = '';
-    lists.forEach(l => sel.add(new Option(l.title, l.id)));
-    const savedList = load('gt_list');
-    currentList = lists.some(l => l.id === savedList) ? savedList : (lists[0] && lists[0].id);
-    sel.value = currentList;
+    const { items } = await call('lists');
+    store('gt_lists', JSON.stringify(items));
+    fillLists(items);
     loadTasks();
   } catch (e) { console.error(e); }
 }
 
-$('list-select').onchange = e => { currentList = e.target.value; store('gt_list', currentList); loadTasks(); };
+$('list-select').onchange = e => {
+  currentList = e.target.value;
+  store('gt_list', currentList);
+  tasks = loadJSON('gt_tasks_' + currentList) || [];
+  render(tasks.length === 0);
+  loadTasks();
+};
 
 async function loadTasks() {
   if (!currentList) return;
+  const list = currentList;
   try {
-    const data = await api(`/lists/${currentList}/tasks?showCompleted=true&showHidden=true&maxResults=100`);
-    const items = (data.items || []).filter(t => t.title);
-    const open = items.filter(t => t.status !== 'completed')
-                      .sort((a, b) => (a.position || '').localeCompare(b.position || ''));
-    const done = items.filter(t => t.status === 'completed')
-                      .sort((a, b) => (b.completed || '').localeCompare(a.completed || ''));
-    renderList($('open-list'), open);
-    renderList($('done-list'), done);
-    $('no-tasks').hidden = open.length > 0;
-    $('done-toggle').hidden = done.length === 0;
-    $('done-toggle').querySelector('span').textContent = `완료됨 (${done.length})`;
-    $('done-list').hidden = !showDone || done.length === 0;
+    const { items } = await call('tasks', { list });
+    if (list !== currentList || pending > 0) return;
+    tasks = items;
+    store('gt_tasks_' + list, JSON.stringify(tasks));
+    render();
   } catch (e) { console.error(e); }
+}
+
+function render(loading = false) {
+  const open = tasks.filter(t => t.status !== 'completed')
+                    .sort((a, b) => (a.position || '').localeCompare(b.position || ''));
+  const done = tasks.filter(t => t.status === 'completed')
+                    .sort((a, b) => (b.completed || '').localeCompare(a.completed || ''));
+  $('tasks-loading').hidden = !loading;
+  renderList($('open-list'), open);
+  renderList($('done-list'), done);
+  $('no-tasks').hidden = loading || open.length > 0;
+  $('done-toggle').hidden = done.length === 0;
+  $('done-toggle').querySelector('span').textContent = `완료됨 (${done.length})`;
+  $('done-list').hidden = !showDone || done.length === 0;
 }
 
 $('done-toggle').onclick = () => {
@@ -595,18 +633,16 @@ $('done-toggle').onclick = () => {
 };
 
 function formatDue(due) {
-  const d = due.slice(0, 10);                       // 'YYYY-MM-DD'
-  const today = new Date();
-  const todayStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const d = due.slice(0, 10);
+  const now = new Date();
+  const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const [, m, day] = d.split('-').map(Number);
-  let label = `${m}월 ${day}일`;
-  if (d === todayStr) label = '오늘';
-  return { label, overdue: d < todayStr };
+  return { label: d === todayStr ? '오늘' : `${m}월 ${day}일`, overdue: d < todayStr };
 }
 
-function renderList(ul, tasks) {
+function renderList(ul, list) {
   ul.innerHTML = '';
-  tasks.forEach(t => {
+  list.forEach(t => {
     const li = document.createElement('li');
     li.className = 'task' + (t.status === 'completed' ? ' done' : '');
 
@@ -642,35 +678,34 @@ function renderList(ul, tasks) {
   });
 }
 
-$('add-form').onsubmit = async e => {
+$('add-form').onsubmit = e => {
   e.preventDefault();
   const title = $('task-input').value.trim();
   if (!title || !currentList) return;
-  const body = { title };
-  if ($('task-due').value) body.due = $('task-due').value + 'T00:00:00.000Z';
+  const due = $('task-due').value ? $('task-due').value + 'T00:00:00.000Z' : undefined;
   $('task-input').value = ''; $('task-due').value = '';
-  try { await api(`/lists/${currentList}/tasks`, { method: 'POST', body: JSON.stringify(body) }); }
-  catch (err) { console.error(err); }
-  loadTasks();
+  tasks.unshift({ id: 'tmp-' + Date.now(), title, due, status: 'needsAction', position: '' });
+  render();
+  write('add', { list: currentList, title, due });
 };
 
-async function toggleTask(t) {
-  const body = t.status === 'completed'
-    ? { status: 'needsAction', completed: null }
-    : { status: 'completed' };
-  try { await api(`/lists/${currentList}/tasks/${t.id}`, { method: 'PATCH', body: JSON.stringify(body) }); }
-  catch (err) { console.error(err); }
-  loadTasks();
+function toggleTask(t) {
+  if (t.id.startsWith('tmp-')) return;
+  const nowDone = t.status !== 'completed';
+  t.status = nowDone ? 'completed' : 'needsAction';
+  t.completed = nowDone ? new Date().toISOString() : undefined;
+  render();
+  write('update', { list: currentList, id: t.id, patch: { status: t.status } });
 }
 
-async function deleteTask(t) {
-  try { await api(`/lists/${currentList}/tasks/${t.id}`, { method: 'DELETE' }); }
-  catch (err) { console.error(err); }
-  loadTasks();
+function deleteTask(t) {
+  if (t.id.startsWith('tmp-')) return;
+  tasks = tasks.filter(x => x !== t);
+  render();
+  write('delete', { list: currentList, id: t.id });
 }
 
 initTasks();
 </script>
-<script src="https://accounts.google.com/gsi/client" async defer onload="gisLoaded()"></script>
 </body>
 </html>
